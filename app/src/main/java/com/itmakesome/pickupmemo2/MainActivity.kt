@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.itmakesome.pickupmemo2.databinding.ActivityMainBinding
 import com.itmakesome.pickupmemo2.ui.MemoListActivity
+import com.itmakesome.pickupmemo2.ui.TestActivity
 import com.itmakesome.pickupmemo2.util.PermissionChecker
 
 class MainActivity : AppCompatActivity() {
@@ -19,6 +20,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnMemoManage.setOnClickListener {
             startActivity(Intent(this, MemoListActivity::class.java))
+        }
+
+        binding.btnPopupTest.setOnClickListener {
+            startActivity(Intent(this, TestActivity::class.java))
         }
 
         binding.btnAccessibilitySettings.setOnClickListener {

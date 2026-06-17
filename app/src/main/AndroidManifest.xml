@@ -32,6 +32,11 @@
             android:name=".ui.MemoEditActivity"
             android:exported="false" />
 
+        <!-- 팝업 검증 테스트 Activity (FEAT-10) -->
+        <activity
+            android:name=".ui.TestActivity"
+            android:exported="false" />
+
         <!-- 접근성 서비스 (배민커넥트 화면 감지용) -->
         <service
             android:name=".service.PickupAccessibilityService"

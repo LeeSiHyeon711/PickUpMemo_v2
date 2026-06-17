@@ -27,4 +27,18 @@
     <string name="btn_accessibility_settings">접근성 설정</string>
     <string name="btn_overlay_settings">오버레이 권한 설정</string>
     <string name="toast_setting_not_found">설정 화면을 열 수 없습니다</string>
+    <!-- FEAT-10: 팝업 검증 테스트 화면 -->
+    <string name="title_test">팝업 테스트</string>
+    <string name="btn_popup_test">팝업 테스트</string>
+    <string name="btn_show_selected">선택한 메모로 팝업 띄우기</string>
+    <string name="btn_match_test">텍스트로 매칭 테스트</string>
+    <string name="hint_test_text">화면에서 본 텍스트 붙여넣기 (예: 픽업지 푸라닭 신림점 전달지 ...)</string>
+    <string name="test_section_a">모드 A — 저장된 메모로 팝업 테스트</string>
+    <string name="test_section_b">모드 B — 텍스트 붙여넣기 매칭 테스트</string>
+    <string name="test_no_memo">저장된 메모가 없습니다</string>
+    <string name="test_overlay_required">오버레이 권한을 먼저 허용하세요</string>
+    <string name="test_input_empty">텍스트를 입력하세요</string>
+    <string name="test_extract_failed">추출 실패: \'픽업지\'·\'전달지\' 또는 \'신규배차_카드\' 키워드가 필요합니다</string>
+    <string name="test_no_match">매칭 없음 · 추출: %s</string>
+    <string name="test_matched">매칭: %s</string>
 </resources>

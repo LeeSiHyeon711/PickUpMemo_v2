@@ -49,4 +49,11 @@
         android:layout_marginTop="24dp"
         android:text="@string/btn_memo_manage" />
 
+    <Button
+        android:id="@+id/btnPopupTest"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/btn_popup_test" />
+
 </LinearLayout>
