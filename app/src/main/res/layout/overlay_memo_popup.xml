@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 오버레이 팝업 레이아웃 — FLAG_NOT_TOUCHABLE 설정으로 터치가 아래 화면으로 통과됨 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <!-- 카드 영역: 라운드 배경 + elevation 효과 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_popup_card"
+        android:elevation="8dp"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 상호명 + 지점명 -->
+        <TextView
+            android:id="@+id/tvPopupTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#CC000000"
+            android:textSize="17sp"
+            android:textStyle="bold" />
+
+        <!-- 메모 내용 -->
+        <TextView
+            android:id="@+id/tvPopupContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:ellipsize="end"
+            android:maxLines="4"
+            android:textColor="#CC333333"
+            android:textSize="15sp" />
+
+        <!-- 태그: 기본 GONE, 값 있을 때만 VISIBLE -->
+        <TextView
+            android:id="@+id/tvPopupTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_popup_card"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp"
+            android:textColor="#CC555555"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</LinearLayout>
