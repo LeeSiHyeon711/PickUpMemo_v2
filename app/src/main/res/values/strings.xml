@@ -5,4 +5,8 @@
     <string name="title_main">PickUpMemo</string>
     <string name="title_memo_list">메모 목록</string>
     <string name="title_memo_edit">메모 편집</string>
+    <string name="btn_memo_manage">메모 관리</string>
+    <string name="empty_memo_list">등록된 메모가 없습니다</string>
+    <string name="btn_add_memo">메모 추가</string>
+    <string name="btn_delete">삭제</string>
 </resources>
