@@ -57,7 +57,10 @@
             android:hint="@string/hint_test_text"
             android:inputType="textMultiLine"
             android:lines="4"
-            android:background="@android:drawable/edit_text" />
+            android:background="@android:drawable/edit_text"
+            android:textColor="@color/black"
+            android:textColorHint="#888888"
+            android:padding="12dp" />
 
         <Button
             android:id="@+id/btnMatchTest"
