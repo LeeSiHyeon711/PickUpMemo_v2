@@ -3,6 +3,7 @@ package com.itmakesome.pickupmemo2.service
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.itmakesome.pickupmemo2.data.BaeminLogRepository
 import com.itmakesome.pickupmemo2.data.MemoRepository
 import com.itmakesome.pickupmemo2.matcher.DedupGuard
 import com.itmakesome.pickupmemo2.matcher.MemoMatcher
@@ -33,6 +34,7 @@ class PickupAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         MemoRepository.init(applicationContext)
+        BaeminLogRepository.init(applicationContext)  // FEAT-12: 로그 저장 계층 초기화(멱등)
         serviceScope.launch {
             MemoRepository.refreshCache()
         }
@@ -53,6 +55,7 @@ class PickupAccessibilityService : AccessibilityService() {
         if (segments.isEmpty()) return
 
         val fullText = segments.joinToString(" / ")
+        maybeLogBaemin(pkg, event.eventType, fullText)   // FEAT-12: 로그 저장(매칭 라인 이전 부가 동작)
         val candidate = StoreExtractor.extract(fullText) ?: return
         val matched = MemoMatcher.match(candidate, MemoRepository.getCachedSnapshot()) ?: return
         if (!DedupGuard.shouldShow(matched.id)) return
@@ -101,8 +104,33 @@ class PickupAccessibilityService : AccessibilityService() {
         }
     }
 
+    // ── FEAT-12: 배민 로그 중복 억제 상태 ────────────────────────────────────
+
+    private var lastLoggedText: String? = null
+    private var lastLoggedAt: Long = 0L
+
+    /**
+     * 배민 화면 텍스트를 로그로 저장한다(부가 동작 — 매칭 라인을 건드리지 않는다).
+     *
+     * - blank 텍스트는 무시한다.
+     * - content-changed 이벤트 폭주로 인한 동일 텍스트 중복 적재를 [LOG_DEDUP_MS]ms 가드로 방지한다.
+     * - 통과 시 serviceScope(IO)에서 비동기 저장 → 접근성 콜백(메인 스레드) 지연 없음.
+     */
+    private fun maybeLogBaemin(pkg: String, eventType: Int, fullText: String) {
+        if (fullText.isBlank()) return
+        val now = System.currentTimeMillis()
+        if (fullText == lastLoggedText && now - lastLoggedAt < LOG_DEDUP_MS) return
+        lastLoggedText = fullText
+        lastLoggedAt = now
+        val typeName = AccessibilityEvent.eventTypeToString(eventType)
+        serviceScope.launch { BaeminLogRepository.save(pkg, typeName, fullText) }
+    }
+
     private companion object {
         /** 한 이벤트에서 수집하는 최대 세그먼트 수 (무한 순회·거대 텍스트 방지). */
         const val MAX_SEGMENTS = 200
+
+        /** 동일 텍스트 중복 저장 억제 시간(ms). content-changed 폭주 방지. */
+        const val LOG_DEDUP_MS = 3000L
     }
 }

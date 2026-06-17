@@ -29,10 +29,19 @@ object MemoRepository {
                 context.applicationContext,
                 AppDatabase::class.java,
                 "pickupmemo.db"
-            ).build()
+            ).addMigrations(AppDatabase.MIGRATION_1_2)
+             .build()
             inited = true
         }
     }
+
+    /**
+     * 초기화된 DB 인스턴스를 반환한다.
+     * BaeminLogRepository / FEAT-13 조회 화면이 동일 DB 인스턴스를 공유하기 위해 사용한다.
+     * init() 호출 전에 사용하면 UninitializedPropertyAccessException이 발생하므로
+     * 반드시 init() 이후에 호출할 것.
+     */
+    fun requireDatabase(): AppDatabase = db
 
     // ── 목록 조회 ──────────────────────────────────────────────────────────
 
