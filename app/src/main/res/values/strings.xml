@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PickUpMemo</string>
+    <string name="accessibility_service_desc">배민커넥트 화면에서 픽업 정보를 감지해 메모합니다.</string>
+    <string name="title_main">PickUpMemo</string>
+    <string name="title_memo_list">메모 목록</string>
+    <string name="title_memo_edit">메모 편집</string>
+</resources>

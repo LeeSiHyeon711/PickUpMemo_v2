@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  접근성 서비스 수집 범위 (FEAT-01).
+
+  - accessibilityEventTypes: 화면 텍스트 변화를 포착하는 3종
+      typeWindowStateChanged   : 창/Activity 전환
+      typeWindowContentChanged : 화면 내용 변경
+      typeViewTextChanged      : 개별 뷰 텍스트 변경
+  - accessibilityFlags:
+      flagReportViewIds            : viewIdResourceName 수집 가능
+      flagIncludeNotImportantViews : 중요도 낮은 뷰까지 순회
+      flagRetrieveInteractiveWindows : 상호작용 가능한 창 정보 확보
+  - canRetrieveWindowContent="true" : 노드 트리(화면 내용) 조회 허용
+  - packageNames="com.woowahan.bros" : 배민커넥트만 대상 (노이즈/부하 감소)
+  - notificationTimeout="100" : 이벤트 콜백 throttle(ms)
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewTextChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagReportViewIds|flagIncludeNotImportantViews|flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="100"
+    android:packageNames="com.woowahan.bros"
+    android:description="@string/accessibility_service_desc" />
