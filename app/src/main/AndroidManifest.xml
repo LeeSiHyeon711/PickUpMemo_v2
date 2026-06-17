@@ -37,6 +37,22 @@
             android:name=".ui.TestActivity"
             android:exported="false" />
 
+        <!-- 배민 로그 조회/내보내기 Activity (FEAT-13) -->
+        <activity
+            android:name=".ui.BaeminLogActivity"
+            android:exported="false" />
+
+        <!-- 내보내기용 FileProvider (FEAT-13) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- 접근성 서비스 (배민커넥트 화면 감지용) -->
         <service
             android:name=".service.PickupAccessibilityService"
