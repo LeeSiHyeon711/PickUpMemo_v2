@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 흰 말풍선 본체 (안전영역 약 24~84 내부, 좌하단 꼬리) -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M38,30 L78,30 A8,8 0 0 1 86,38 L86,60 A8,8 0 0 1 78,68 L52,68 L42,80 L42,68 L38,68 A8,8 0 0 1 30,60 L30,38 A8,8 0 0 1 38,30 Z" />
+    <!-- 메모 줄 1 -->
+    <path
+        android:fillColor="@color/purple_700"
+        android:pathData="M40,42 L76,42 L76,46 L40,46 Z" />
+    <!-- 메모 줄 2 (조금 짧게) -->
+    <path
+        android:fillColor="@color/purple_700"
+        android:pathData="M40,52 L66,52 L66,56 L40,56 Z" />
+</vector>
