@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="24dp">
 
     <TextView
         android:id="@+id/textTitle"
@@ -12,6 +13,34 @@
         android:text="@string/title_main"
         android:textSize="24sp"
         android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvAccessibilityStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btnAccessibilitySettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/btn_accessibility_settings" />
+
+    <TextView
+        android:id="@+id/tvOverlayStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btnOverlaySettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/btn_overlay_settings" />
 
     <Button
         android:id="@+id/btnMemoManage"

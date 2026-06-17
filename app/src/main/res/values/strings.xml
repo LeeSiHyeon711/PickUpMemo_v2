@@ -17,4 +17,14 @@
     <string name="error_required">필수 항목입니다</string>
     <string name="toast_required_fields">필수 항목을 입력하세요</string>
     <string name="toast_memo_not_found">메모를 찾을 수 없습니다</string>
+    <!-- FEAT-08: 권한 안내 상태/버튼 문자열 -->
+    <string name="status_accessibility">접근성 서비스: %s</string>
+    <string name="status_overlay">오버레이 권한: %s</string>
+    <string name="status_on">실행 중</string>
+    <string name="status_off">꺼짐</string>
+    <string name="status_granted">허가됨</string>
+    <string name="status_denied">미허가</string>
+    <string name="btn_accessibility_settings">접근성 설정</string>
+    <string name="btn_overlay_settings">오버레이 권한 설정</string>
+    <string name="toast_setting_not_found">설정 화면을 열 수 없습니다</string>
 </resources>
