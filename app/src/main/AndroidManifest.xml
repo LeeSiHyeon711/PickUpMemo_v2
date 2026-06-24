@@ -3,6 +3,8 @@
 
     <!-- 오버레이(팝업) 권한: 시스템 위에 메모 입력 창 표시용 -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- 외부 API 통신용 (FEAT-14) -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"

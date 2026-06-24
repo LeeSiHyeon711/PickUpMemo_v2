@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
 }
+
+// local.properties에서 카카오 REST API 키를 읽는다. 파일이 없거나 항목이 없으면 빈 문자열 fallback.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val kakaoRestKey: String = localProps.getProperty("KAKAO_REST_API_KEY") ?: ""
 
 android {
     namespace = "com.itmakesome.pickupmemo2"
@@ -14,6 +23,7 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "KAKAO_REST_API_KEY", "\"$kakaoRestKey\"")
     }
 
     buildTypes {
@@ -33,6 +43,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -46,4 +57,5 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }
