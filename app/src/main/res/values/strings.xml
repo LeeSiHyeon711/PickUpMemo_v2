@@ -65,4 +65,10 @@
     <string name="hint_dest">서울 관악구 남부순환로161나길 13 **** (신림동)</string>
     <string name="btn_route_test">경로 조회 팝업</string>
     <string name="test_route_input_empty">픽업지와 전달지를 모두 입력하세요</string>
+    <string name="route_fail_api_key">API 키 없음 — local.properties에 KAKAO_REST_API_KEY 설정 후 재빌드</string>
+    <string name="route_fail_provider">경로 서비스 미초기화</string>
+    <string name="route_fail_pickup_geocode">픽업지 좌표 변환 실패</string>
+    <string name="route_fail_dest_geocode">전달지 좌표 변환 실패 (fallback 1~4단계 모두 실패)</string>
+    <string name="route_fail_directions">경로 조회 실패</string>
+    <string name="route_fail_timeout">5초 timeout</string>
 </resources>

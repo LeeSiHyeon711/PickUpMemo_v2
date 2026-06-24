@@ -80,24 +80,24 @@ class PickupAccessibilityService : AccessibilityService() {
                 val token = MemoPopupController.show(this, matched, hasRoute)
                 if (hasRoute) {
                     serviceScope.launch {
-                        val r = RouteService.resolve(addr!!.pickup, addr.dest)
-                        MemoPopupController.updateRoute(token, r)
+                        val outcome = RouteService.resolve(addr!!.pickup, addr.dest)
+                        MemoPopupController.updateRoute(token, outcome.route)
                     }
                 }
             }
             addr != null && BuildConfig.DEBUG -> {
                 val token = MemoPopupController.show(this, null, true)
                 serviceScope.launch {
-                    val r = RouteService.resolve(addr.pickup, addr.dest)
-                    MemoPopupController.updateRoute(token, r)
+                    val outcome = RouteService.resolve(addr.pickup, addr.dest)
+                    MemoPopupController.updateRoute(token, outcome.route)
                 }
             }
             addr != null -> {
                 serviceScope.launch {
-                    val r = RouteService.resolve(addr.pickup, addr.dest)
-                    if (r != null) {
+                    val outcome = RouteService.resolve(addr.pickup, addr.dest)
+                    if (outcome.route != null) {
                         val token = MemoPopupController.show(this@PickupAccessibilityService, null, true)
-                        MemoPopupController.updateRoute(token, r)
+                        MemoPopupController.updateRoute(token, outcome.route)
                     }
                 }
             }
