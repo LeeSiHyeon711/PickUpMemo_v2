@@ -18,7 +18,7 @@ object AddressExtractor {
             if (dest.isNullOrBlank()) dest = b?.second
         }
         if (pickup.isNullOrBlank() || dest.isNullOrBlank()) return null
-        return AddressPair(pickup!!.trim(), dest!!.trim())
+        return AddressPair(pickup.trim(), dest.trim())
     }
 
     private fun sourceA(segments: List<String>, key: String): String? {
