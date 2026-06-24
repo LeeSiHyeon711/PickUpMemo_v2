@@ -6,6 +6,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.itmakesome.pickupmemo2.BuildConfig
 import com.itmakesome.pickupmemo2.R
 import com.itmakesome.pickupmemo2.data.Memo
 import com.itmakesome.pickupmemo2.data.MemoRepository
@@ -13,6 +14,7 @@ import com.itmakesome.pickupmemo2.databinding.ActivityTestBinding
 import com.itmakesome.pickupmemo2.matcher.MemoMatcher
 import com.itmakesome.pickupmemo2.matcher.StoreExtractor
 import com.itmakesome.pickupmemo2.overlay.MemoPopupController
+import com.itmakesome.pickupmemo2.route.RouteService
 import kotlinx.coroutines.launch
 
 /**
@@ -50,8 +52,11 @@ class TestActivity : AppCompatActivity() {
             )
         }
 
+        RouteService.init(BuildConfig.KAKAO_REST_API_KEY)
+
         binding.btnShowSelected.setOnClickListener { showSelectedMemo() }
         binding.btnMatchTest.setOnClickListener { runMatchTest() }
+        binding.btnRouteTest.setOnClickListener { runRouteTest() }
     }
 
     /**
@@ -110,5 +115,28 @@ class TestActivity : AppCompatActivity() {
             getString(R.string.test_matched, "${matched.storeName} ${matched.branchName}"),
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    private fun runRouteTest() {
+        val pickup = binding.etPickup.text?.toString()?.trim().orEmpty()
+        val dest = binding.etDest.text?.toString()?.trim().orEmpty()
+        if (pickup.isBlank() || dest.isBlank()) {
+            Toast.makeText(this, getString(R.string.test_route_input_empty), Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, getString(R.string.test_overlay_required), Toast.LENGTH_SHORT).show()
+            return
+        }
+        val token = MemoPopupController.show(this, null, hasRoute = true)
+        lifecycleScope.launch {
+            val r = RouteService.resolve(pickup, dest)
+            MemoPopupController.updateRoute(token, r)
+            Toast.makeText(
+                this@TestActivity,
+                r?.summaryText ?: getString(R.string.popup_route_unavailable),
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }
