@@ -3,12 +3,15 @@ package com.itmakesome.pickupmemo2.service
 import android.accessibilityservice.AccessibilityService
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.itmakesome.pickupmemo2.BuildConfig
 import com.itmakesome.pickupmemo2.data.BaeminLogRepository
 import com.itmakesome.pickupmemo2.data.MemoRepository
+import com.itmakesome.pickupmemo2.matcher.AddressExtractor
 import com.itmakesome.pickupmemo2.matcher.DedupGuard
 import com.itmakesome.pickupmemo2.matcher.MemoMatcher
 import com.itmakesome.pickupmemo2.matcher.StoreExtractor
 import com.itmakesome.pickupmemo2.overlay.MemoPopupController
+import com.itmakesome.pickupmemo2.route.RouteService
 import com.itmakesome.pickupmemo2.util.Packages
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,12 +23,11 @@ import kotlinx.coroutines.launch
  * 접근성 서비스 본문 (FEAT-07).
  *
  * 배민커넥트(TARGET_PACKAGE) 화면 변경 이벤트를 수신해 노드 트리 텍스트를 조립하고,
- * StoreExtractor → MemoMatcher → DedupGuard → MemoPopupController 순으로 결선한다.
+ * StoreExtractor → MemoMatcher → AddressExtractor → DedupGuard → MemoPopupController 순으로 결선한다.
  *
  * - lifecycleScope 없음(AccessibilityService는 Activity/Fragment가 아님).
  *   코루틴은 전용 serviceScope(SupervisorJob + IO)를 사용하고 onDestroy에서 cancel.
- * - 매칭·팝업 호출은 접근성 콜백(메인 스레드)에서 동기 실행한다.
- *   getCachedSnapshot()은 메모리 읽기라 지연 없음.
+ * - RouteService.resolve는 serviceScope에서 비동기 실행한다.
  */
 class PickupAccessibilityService : AccessibilityService() {
 
@@ -34,7 +36,8 @@ class PickupAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         MemoRepository.init(applicationContext)
-        BaeminLogRepository.init(applicationContext)  // FEAT-12: 로그 저장 계층 초기화(멱등)
+        BaeminLogRepository.init(applicationContext)
+        RouteService.init(BuildConfig.KAKAO_REST_API_KEY)
         serviceScope.launch {
             MemoRepository.refreshCache()
         }
@@ -55,11 +58,50 @@ class PickupAccessibilityService : AccessibilityService() {
         if (segments.isEmpty()) return
 
         val fullText = segments.joinToString(" / ")
-        maybeLogBaemin(pkg, event.eventType, fullText)   // FEAT-12: 로그 저장(매칭 라인 이전 부가 동작)
-        val candidate = StoreExtractor.extract(fullText) ?: return
-        val matched = MemoMatcher.match(candidate, MemoRepository.getCachedSnapshot()) ?: return
-        if (!DedupGuard.shouldShow(matched.id)) return
-        MemoPopupController.show(this, matched)
+        maybeLogBaemin(pkg, event.eventType, fullText)
+
+        val snapshot = MemoRepository.getCachedSnapshot()
+        val candidate = StoreExtractor.extract(fullText)
+        val matched = candidate?.let { MemoMatcher.match(it, snapshot) }
+        val addr = AddressExtractor.extract(segments.toList(), fullText)
+
+        if (matched == null && addr == null) return
+
+        val hasRoute = addr != null
+
+        if (matched != null) {
+            if (!DedupGuard.shouldShow(matched.id)) return
+        } else {
+            if (!DedupGuard.shouldShow(addr!!.key())) return
+        }
+
+        when {
+            matched != null -> {
+                val token = MemoPopupController.show(this, matched, hasRoute)
+                if (hasRoute) {
+                    serviceScope.launch {
+                        val r = RouteService.resolve(addr!!.pickup, addr.dest)
+                        MemoPopupController.updateRoute(token, r)
+                    }
+                }
+            }
+            addr != null && BuildConfig.DEBUG -> {
+                val token = MemoPopupController.show(this, null, true)
+                serviceScope.launch {
+                    val r = RouteService.resolve(addr.pickup, addr.dest)
+                    MemoPopupController.updateRoute(token, r)
+                }
+            }
+            addr != null -> {
+                serviceScope.launch {
+                    val r = RouteService.resolve(addr.pickup, addr.dest)
+                    if (r != null) {
+                        val token = MemoPopupController.show(this@PickupAccessibilityService, null, true)
+                        MemoPopupController.updateRoute(token, r)
+                    }
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -71,20 +113,12 @@ class PickupAccessibilityService : AccessibilityService() {
         // 수집형 서비스라 별도 처리 불필요.
     }
 
-    /**
-     * 노드 트리를 깊이 우선으로 순회하며 text / contentDescription / viewIdResourceName
-     * 세그먼트를 [out]에 모은다. [MAX_SEGMENTS] 도달 시 순회 중단.
-     *
-     * 세그먼트 형식: `텍스트 | desc=설명 | id=리소스아이디`
-     * (v1 ScreenAccessibilityService.collectNode 86~110행 패턴 재사용)
-     */
     private fun collectNode(node: AccessibilityNodeInfo, out: LinkedHashSet<String>) {
         if (out.size >= MAX_SEGMENTS) return
 
         val text = node.text?.toString()?.trim().orEmpty()
         val desc = node.contentDescription?.toString()?.trim().orEmpty()
         val rawId = node.viewIdResourceName?.trim().orEmpty()
-        // "패키지:id/tv_store_name" → "tv_store_name" 으로 축약.
         val id = if (rawId.isNotEmpty()) rawId.substringAfterLast('/') else ""
 
         if (text.isNotEmpty() || desc.isNotEmpty()) {
@@ -104,18 +138,9 @@ class PickupAccessibilityService : AccessibilityService() {
         }
     }
 
-    // ── FEAT-12: 배민 로그 중복 억제 상태 ────────────────────────────────────
-
     private var lastLoggedText: String? = null
     private var lastLoggedAt: Long = 0L
 
-    /**
-     * 배민 화면 텍스트를 로그로 저장한다(부가 동작 — 매칭 라인을 건드리지 않는다).
-     *
-     * - blank 텍스트는 무시한다.
-     * - content-changed 이벤트 폭주로 인한 동일 텍스트 중복 적재를 [LOG_DEDUP_MS]ms 가드로 방지한다.
-     * - 통과 시 serviceScope(IO)에서 비동기 저장 → 접근성 콜백(메인 스레드) 지연 없음.
-     */
     private fun maybeLogBaemin(pkg: String, eventType: Int, fullText: String) {
         if (fullText.isBlank()) return
         val now = System.currentTimeMillis()
@@ -127,10 +152,7 @@ class PickupAccessibilityService : AccessibilityService() {
     }
 
     private companion object {
-        /** 한 이벤트에서 수집하는 최대 세그먼트 수 (무한 순회·거대 텍스트 방지). */
         const val MAX_SEGMENTS = 200
-
-        /** 동일 텍스트 중복 저장 억제 시간(ms). content-changed 폭주 방지. */
         const val LOG_DEDUP_MS = 3000L
     }
 }
