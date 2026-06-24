@@ -55,6 +55,25 @@
             android:textSize="12sp"
             android:visibility="gone" />
 
+        <TextView
+            android:id="@+id/tvPopupRoute"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="#CC1A73E8"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvPopupHill"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#CCD84315"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </LinearLayout>
