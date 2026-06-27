@@ -28,7 +28,18 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // 내부 배터리/안정성 테스트용: release를 debug 키로 서명해 바로 설치 가능하게 한다.
+            // (정식 배포 시 별도 서명키로 교체할 것 — 안정화 테스트 한정)
+            signingConfig = signingConfigs.getByName("debug")
+            // v3.1 안정화: R8 minify 활성화 + 코드 최적화로 접근성 이벤트 처리 비용 절감.
+            isMinifyEnabled = true
+            // shrinkResources는 리소스 제거 리스크가 있어 안정화 패치에서는 보류(필요 시 후속 이슈).
+            isShrinkResources = false
+            proguardFiles(
+                // optimize 버전이라야 proguard-rules.pro의 assumenosideeffects(로그 제거)가 적용됨.
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
