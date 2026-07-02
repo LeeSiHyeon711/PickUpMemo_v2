@@ -5,6 +5,7 @@ import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -25,13 +26,18 @@ import java.util.concurrent.atomic.AtomicLong
  *   메모와 경로 정보를 단일 팝업에 통합 표시한다.
  *
  * 제약:
- *   - canDrawOverlays 미허가 시 조용히 skip (권한 요청은 FEAT-08 책임).
+ *   - canDrawOverlays 미허가 시 조용히 skip (권한 요청은 FEAT-08 책임). (#26 — 사유는 로그로 남긴다)
  *   - FLAG_NOT_TOUCHABLE — 팝업이 배차 카드 거절/수락 버튼 조작을 방해하지 않음.
  *   - 태그 null/blank → tvPopupTag GONE ("태그 없음" 등 대체 문구 금지).
+ *
+ * (#26) show()는 onResult 콜백으로 실제 addView 성공/실패를 알려준다.
+ *   호출부(PickupAccessibilityService)는 이 콜백을 받은 뒤에야 DedupGuard를 마킹해야
+ *   표시가 안 된 카드가 후속 이벤트에서 재시도될 수 있다.
  */
 object MemoPopupController {
 
     const val AUTO_DISMISS_MS = 6000L
+    private const val TAG = "MemoPopupController"
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var currentView: View? = null
@@ -47,9 +53,18 @@ object MemoPopupController {
         show(context, memo, hasRoute = false)
     }
 
-    fun show(context: Context, memo: Memo?, hasRoute: Boolean): Long {
+    fun show(
+        context: Context,
+        memo: Memo?,
+        hasRoute: Boolean,
+        onResult: ((Boolean) -> Unit)? = null
+    ): Long {
         val token = generation.incrementAndGet()
-        if (!Settings.canDrawOverlays(context)) return token
+        if (!Settings.canDrawOverlays(context)) {
+            Log.d(TAG, "popup skipped: reason=overlay-permission-off token=$token")
+            onResult?.invoke(false)
+            return token
+        }
 
         mainHandler.post {
             dismiss()
@@ -105,6 +120,8 @@ object MemoPopupController {
             try {
                 wmLocal.addView(view, params)
             } catch (e: Exception) {
+                Log.d(TAG, "popup skipped: reason=addView-failed token=$token err=${e.message}")
+                onResult?.invoke(false)
                 return@post
             }
 
@@ -113,6 +130,8 @@ object MemoPopupController {
 
             mainHandler.removeCallbacks(dismissRunnable)
             mainHandler.postDelayed(dismissRunnable, AUTO_DISMISS_MS)
+            Log.d(TAG, "overlay shown: token=$token")
+            onResult?.invoke(true)
         }
         return token
     }

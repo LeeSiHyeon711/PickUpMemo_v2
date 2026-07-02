@@ -90,47 +90,51 @@ class PickupAccessibilityService : AccessibilityService() {
 
         val fullText = segments.joinToString(" / ")
         maybeLogBaemin(pkg, eventType, fullText)
+        Log.d(TAG, "detect: card text collected segments=${segments.size}")
 
         val snapshot = MemoRepository.getCachedSnapshot()
         val candidate = StoreExtractor.extract(fullText)
         val matched = candidate?.let { MemoMatcher.match(it, snapshot) }
         val addr = AddressExtractor.extract(segments.toList(), fullText)
 
-        if (matched == null && addr == null) return
+        if (matched == null && addr == null) {
+            Log.d(TAG, "popup skipped: reason=no-match-no-address")
+            return
+        }
+        Log.d(
+            TAG,
+            "parse success: storeText=$candidate " +
+                "matched=${matched?.let { "${it.storeName}/${it.branchName}" }} " +
+                "pickup=${addr?.pickup} dest=${addr?.dest}"
+        )
 
+        // (#26) 감지 성공 시에는 메모 유무·빌드타입(DEBUG/release)·경로조회 결과와 무관하게
+        //   즉시 오버레이를 띄운다. FEAT-21 케이스 C/D의 DEBUG 게이트·release의 route 성공
+        //   종속(구 케이스 D)을 제거해 release에서 팝업이 아예 안 뜨는 문제를 없앤다.
+        //   경로 정보는 표시 이후 RouteService 조회가 끝나면 updateRoute로 채운다.
         val hasRoute = addr != null
+        val dedupKey = matched?.id?.toString() ?: addr!!.key()
 
-        if (matched != null) {
-            if (!DedupGuard.shouldShow(matched.id)) return
-        } else {
-            if (!DedupGuard.shouldShow(addr!!.key())) return
+        // (#26) dedup은 "지금 마킹"이 아니라 "표시 성공 여부 확인 후 마킹"으로 바꾼다.
+        //   여기서는 canShow로 창(WINDOW_MS) 안에 이미 보여줬는지만 확인한다.
+        if (!DedupGuard.canShow(dedupKey)) {
+            Log.d(TAG, "popup skipped: reason=dedup key=$dedupKey")
+            return
         }
 
-        when {
-            matched != null -> {
-                val token = MemoPopupController.show(this, matched, hasRoute)
-                if (hasRoute) {
-                    serviceScope.launch {
-                        val outcome = RouteService.resolve(addr!!.pickup, addr.dest)
-                        MemoPopupController.updateRoute(token, outcome.route)
-                    }
-                }
+        Log.d(TAG, "overlay show requested: matched=${matched != null} hasRoute=$hasRoute key=$dedupKey")
+        val token = MemoPopupController.show(this, matched, hasRoute) { success ->
+            if (success) {
+                DedupGuard.markShown(dedupKey)
             }
-            addr != null && BuildConfig.DEBUG -> {
-                val token = MemoPopupController.show(this, null, true)
-                serviceScope.launch {
-                    val outcome = RouteService.resolve(addr.pickup, addr.dest)
-                    MemoPopupController.updateRoute(token, outcome.route)
-                }
-            }
-            addr != null -> {
-                serviceScope.launch {
-                    val outcome = RouteService.resolve(addr.pickup, addr.dest)
-                    if (outcome.route != null) {
-                        val token = MemoPopupController.show(this@PickupAccessibilityService, null, true)
-                        MemoPopupController.updateRoute(token, outcome.route)
-                    }
-                }
+            // 실패(권한 OFF·addView 실패)는 MemoPopupController가 사유를 로그로 남긴다.
+            // 여기서 마킹하지 않으므로 동일 카드의 후속 이벤트가 재시도될 수 있다.
+        }
+
+        if (addr != null) {
+            serviceScope.launch {
+                val outcome = RouteService.resolve(addr.pickup, addr.dest)
+                MemoPopupController.updateRoute(token, outcome.route)
             }
         }
     }
